@@ -8,10 +8,18 @@ Automatically posts a comment on a Tracker Boot story when you push a commit tha
 
 ## Installation
 
-Install the package globally (requires access to the BKL GitHub org):
+Install the package globally (requires access to the Bekind-Labs GitHub org).
+
+**If you authenticate with SSH:**
 
 ```sh
-npm install -g bekindlabs/tracker-boot-git-hooks
+npm install -g git+ssh://git@github.com/Bekind-Labs/tracker-boot-git-hooks.git
+```
+
+**If you authenticate with HTTPS via the GitHub CLI (`gh auth login`):**
+
+```sh
+npm install -g https://github.com/Bekind-Labs/tracker-boot-git-hooks.git
 ```
 
 Then run this once inside any repo you want to track:
@@ -118,6 +126,6 @@ The hook never blocks a push — if the API is unreachable or returns an error, 
 
 ## TODO
 
-[ ] Release to the world 🌍
-[ ] Support story state changes based on keywords
-[ ] Support more Git hosting providers (GitLab, Bitbucket, etc.)
+- [ ] Release to the world 🌍
+- [ ] Support story state changes based on keywords
+- [ ] Support more Git hosting providers (GitLab, Bitbucket, etc.)
