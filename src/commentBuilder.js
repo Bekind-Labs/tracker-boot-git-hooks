@@ -23,7 +23,7 @@ export function buildCommentContent(commit) {
     if (trimmedBody) parts.push(trimmedBody)
   }
 
-  parts.push('\n*posted via Tracker Boot Git Hook*')
+  parts.push('\n*posted via [Tracker Boot Git Hook](https://github.com/Bekind-Labs/tracker-boot-git-hooks)*')
 
   return parts.join('\n')
 }

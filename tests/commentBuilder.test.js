@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { buildCommentContent } from '../src/commentBuilder.js'
 
-const FOOTER = '\n\n*posted via Tracker Boot Git Hook*'
+const FOOTER = '\n\n*posted via [Tracker Boot Git Hook](https://github.com/Bekind-Labs/tracker-boot-git-hooks)*'
 
 const BASE = {
   sha: 'abc1234def5678901234',
