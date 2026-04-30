@@ -19,11 +19,13 @@ if (subcommand === 'hook') {
   const stdin = readFileSync('/dev/stdin', 'utf8')
   const baseUrl = process.env.TRACKER_BASE_URL ?? DEFAULT_BASE_URL
   // Git passes the remote name as $1 and remote URL as $2 to the pre-push hook
+  const remoteName = args[1] ?? null
   const remoteUrl = args[2] ?? null
 
   runHook({
     stdin,
     ...resolveUrls(baseUrl),
+    remoteName,
     remoteUrl,
   }).catch((err) => {
     process.stderr.write(`tracker-boot-git-hooks: unexpected error: ${err.message}\n`)

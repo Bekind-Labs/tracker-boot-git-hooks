@@ -30,6 +30,26 @@ describe('getCommitsInRange', () => {
     expect(getCommitsInRange('old', 'new')).toEqual([])
   })
 
+  it('uses --not --remotes=<remote> when remoteSha is null and remote is known', () => {
+    spawnSync.mockReturnValueOnce({ status: 0, stdout: 'abc1234\x00fix\x00\x00\n' })
+    getCommitsInRange(null, 'def5678', { remote: 'origin' })
+    expect(spawnSync).toHaveBeenCalledWith(
+      'git',
+      ['log', 'def5678', '--not', '--remotes=origin', '--format=%H%x00%s%x00%b%x00'],
+      expect.anything()
+    )
+  })
+
+  it('uses --not --remotes when remoteSha is null and no remote name is available', () => {
+    spawnSync.mockReturnValueOnce({ status: 0, stdout: '' })
+    getCommitsInRange(null, 'def5678')
+    expect(spawnSync).toHaveBeenCalledWith(
+      'git',
+      ['log', 'def5678', '--not', '--remotes', '--format=%H%x00%s%x00%b%x00'],
+      expect.anything()
+    )
+  })
+
   it('throws when git log fails', () => {
     spawnSync.mockReturnValueOnce({ status: 1, stdout: '', stderr: 'fatal: bad object abc' })
     expect(() => getCommitsInRange('bad', 'sha')).toThrow('fatal: bad object abc')

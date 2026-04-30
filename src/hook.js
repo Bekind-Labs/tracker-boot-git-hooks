@@ -55,7 +55,7 @@ async function ensureCredentials({ queryUrl, lang, deps }) {
   return { apiKey, personId, projectId }
 }
 
-export async function runHook({ stdin, mutationUrl, queryUrl, remoteUrl }, inject = {}) {
+export async function runHook({ stdin, mutationUrl, queryUrl, remoteName, remoteUrl }, inject = {}) {
   const lang = detectLang(process.env.LANG)
   const deps = {
     getConfig,
@@ -79,7 +79,7 @@ export async function runHook({ stdin, mutationUrl, queryUrl, remoteUrl }, injec
   for (const { localSha, remoteSha } of ranges) {
     let commits
     try {
-      commits = deps.getCommitsInRange(remoteSha, localSha)
+      commits = deps.getCommitsInRange(remoteSha, localSha, { remote: remoteName })
     } catch (err) {
       process.stderr.write(`tracker-boot-git-hooks: ${err.message}\n`)
       continue

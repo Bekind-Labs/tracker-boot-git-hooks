@@ -19,10 +19,10 @@ describe('parsePushInput', () => {
     expect(parsePushInput(stdin)).toEqual([])
   })
 
-  it('uses empty-tree SHA when remote is zero (new branch)', () => {
+  it('returns null remoteSha when remote is zero (new branch, no upstream)', () => {
     const stdin = `refs/heads/feat abc1234 refs/heads/feat ${ZERO_SHA}\n`
     expect(parsePushInput(stdin)).toEqual([
-      { localSha: 'abc1234', remoteSha: '4b825dc642cb6eb9a060e54bf8d69288fbee4904' },
+      { localSha: 'abc1234', remoteSha: null },
     ])
   })
 
