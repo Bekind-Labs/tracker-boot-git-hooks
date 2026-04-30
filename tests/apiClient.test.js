@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
 import { createServer } from 'http'
-import { getMe, createComment } from '../src/apiClient.js'
+import { createComment } from '../src/apiClient.js'
 
 describe('graphqlPost timeout', () => {
   let slowServer
@@ -20,7 +20,9 @@ describe('graphqlPost timeout', () => {
 
   it('throws "request timed out" when the server does not respond within timeoutMs', async () => {
     const url = `http://localhost:${slowPort}/graphql`
-    await expect(getMe({ queryUrl: url, apiKey: 'x', timeoutMs: 50 })).rejects.toThrow('request timed out')
+    await expect(
+      createComment({ mutationUrl: url, apiKey: 'x', projectId: 'p', storyId: '123456789', content: 'hi', timeoutMs: 50 })
+    ).rejects.toThrow('request timed out')
   })
 })
 
@@ -59,41 +61,10 @@ function url() {
   return `http://localhost:${port}/graphql`
 }
 
-describe('getMe', () => {
-  it('sends X-API-KEY header and returns person id', async () => {
-    nextResponse = () => ({
-      status: 200,
-      payload: JSON.stringify({ data: { me: { id: 'person-99' } } }),
-    })
-    const id = await getMe({ queryUrl: url(), apiKey: 'secret' })
-    expect(id).toBe('person-99')
-    expect(captured.headers['x-api-key']).toBe('secret')
-    expect(captured.headers['authorization']).toBeUndefined()
-    expect(captured.method).toBe('POST')
-  })
-
-  it('throws on GraphQL error response', async () => {
-    nextResponse = () => ({
-      status: 200,
-      payload: JSON.stringify({ errors: [{ message: 'Unauthorized' }] }),
-    })
-    await expect(getMe({ queryUrl: url(), apiKey: 'x' })).rejects.toThrow('Unauthorized')
-  })
-
-  it('throws a user-facing message when me is null', async () => {
-    nextResponse = () => ({
-      status: 200,
-      payload: JSON.stringify({ data: { me: null } }),
-    })
-    await expect(getMe({ queryUrl: url(), apiKey: 'revoked' })).rejects.toThrow(/API key/)
-  })
-})
-
 describe('createComment', () => {
   const PARAMS = {
     apiKey: 'secret',
     projectId: 'proj-1',
-    personId: 'person-99',
     storyId: '123456789',
     content: 'abc1234\n`fix bug`',
   }
@@ -109,7 +80,7 @@ describe('createComment', () => {
     expect(captured.method).toBe('POST')
   })
 
-  it('sends projectId, personId, storyId, content, and a UUID commandId in variables', async () => {
+  it('sends projectId, storyId, content, and a UUID commandId in variables', async () => {
     nextResponse = () => ({
       status: 200,
       payload: JSON.stringify({ data: { executeCommand: { version: 2 } } }),
@@ -117,7 +88,7 @@ describe('createComment', () => {
     await createComment({ mutationUrl: url(), ...PARAMS })
     const { variables } = JSON.parse(captured.body)
     expect(variables.projectId).toBe('proj-1')
-    expect(variables.personId).toBe('person-99')
+    expect(variables.personId).toBeUndefined()
     expect(variables.storyId).toBe('123456789')
     expect(variables.content).toBe('abc1234\n`fix bug`')
     expect(variables.commandId).toMatch(/^[0-9a-f-]{36}$/)

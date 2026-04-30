@@ -14,7 +14,6 @@ afterEach(() => {
 const HOOK_ARGS = {
   stdin: 'refs/heads/main abc refs/heads/main def\n',
   mutationUrl: 'https://api.example.com/graphql',
-  queryUrl: 'https://api.example.com/analytics/graphql',
   remoteUrl: null,
 }
 
@@ -25,7 +24,6 @@ function makeDeps(overrides = {}) {
     getConfig: vi.fn().mockReturnValue(null),
     setGlobalConfig: vi.fn(),
     setLocalConfig: vi.fn(),
-    getMe: vi.fn().mockResolvedValue('person-1'),
     createComment: vi.fn().mockResolvedValue({}),
     getCommitsInRange: vi.fn().mockReturnValue([]),
     prompt: vi.fn().mockResolvedValue('user-input'),
@@ -33,10 +31,9 @@ function makeDeps(overrides = {}) {
   }
 }
 
-function withConfig(deps, { apiKey = 'key-1', personId = 'p-1', projectId = 'proj-1' } = {}) {
+function withConfig(deps, { apiKey = 'key-1', projectId = 'proj-1' } = {}) {
   deps.getConfig.mockImplementation((key, { global: isGlobal, local: isLocal } = {}) => {
     if (key === 'tracker.apiKey' && isGlobal) return apiKey
-    if (key === 'tracker.personId' && isGlobal) return personId
     if (key === 'tracker.projectId' && isLocal) return projectId
     return null
   })
@@ -52,8 +49,18 @@ describe('runHook', () => {
 
     expect(deps.createComment).toHaveBeenCalledOnce()
     expect(deps.createComment).toHaveBeenCalledWith(
-      expect.objectContaining({ storyId: '123456789', personId: 'p-1', projectId: 'proj-1' })
+      expect.objectContaining({ storyId: '123456789', projectId: 'proj-1' })
     )
+  })
+
+  it('does not include personId in the createComment call', async () => {
+    const deps = withConfig(makeDeps())
+    deps.getCommitsInRange.mockReturnValue([STORY_COMMIT])
+
+    await runHook(HOOK_ARGS, deps)
+
+    const call = deps.createComment.mock.calls[0][0]
+    expect(call.personId).toBeUndefined()
   })
 
   it('posts separate comments for each story ID in a single commit', async () => {
@@ -113,7 +120,7 @@ describe('runHook', () => {
 
   it('resolves without throwing when credential setup fails', async () => {
     const deps = makeDeps({
-      getMe: vi.fn().mockRejectedValue(new Error('invalid API key')),
+      prompt: vi.fn().mockRejectedValue(new Error('no tty available')),
     })
     deps.getConfig.mockImplementation((key, { local: isLocal } = {}) => {
       if (key === 'tracker.projectId' && isLocal) return 'proj-1'
@@ -123,22 +130,6 @@ describe('runHook', () => {
 
     await expect(runHook(HOOK_ARGS, deps)).resolves.not.toThrow()
     expect(process.stderr.write).toHaveBeenCalledWith(expect.stringContaining('setup failed'))
-  })
-
-  it('fetches and stores person ID when only an API key is configured', async () => {
-    const deps = makeDeps()
-    deps.getConfig.mockImplementation((key, { global: isGlobal, local: isLocal } = {}) => {
-      if (key === 'tracker.apiKey' && isGlobal) return 'my-key'
-      if (key === 'tracker.projectId' && isLocal) return 'proj-1'
-      return null
-    })
-    deps.getMe.mockResolvedValue('fetched-person-id')
-    deps.getCommitsInRange.mockReturnValue([STORY_COMMIT])
-
-    await runHook(HOOK_ARGS, deps)
-
-    expect(deps.getMe).toHaveBeenCalledWith({ queryUrl: HOOK_ARGS.queryUrl, apiKey: 'my-key' })
-    expect(deps.setGlobalConfig).toHaveBeenCalledWith('tracker.personId', 'fetched-person-id')
   })
 
   it('writes "comment posted" to stderr after a successful API call', async () => {
@@ -173,14 +164,12 @@ describe('runHook', () => {
 
     expect(deps.prompt).toHaveBeenCalled()
     expect(deps.setGlobalConfig).toHaveBeenCalledWith('tracker.apiKey', 'user-input')
-    expect(deps.setGlobalConfig).toHaveBeenCalledWith('tracker.personId', 'person-1')
   })
 
   it('prompts for project ID when absent and stores it locally', async () => {
     const deps = makeDeps()
     deps.getConfig.mockImplementation((key, { global: isGlobal } = {}) => {
       if (key === 'tracker.apiKey' && isGlobal) return 'my-key'
-      if (key === 'tracker.personId' && isGlobal) return 'p-1'
       return null
     })
     deps.getCommitsInRange.mockReturnValue([STORY_COMMIT])

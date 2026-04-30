@@ -1,12 +1,9 @@
 import { randomUUID } from 'crypto'
 
-const GET_ME_QUERY = `query getMe { me { id } }`
-
 const CREATE_COMMENT_MUTATION = `
 mutation ExecuteCommentCreate(
   $projectId: ID!
   $commandId: ID!
-  $personId: ID!
   $storyId: ID!
   $content: String!
 ) {
@@ -15,7 +12,6 @@ mutation ExecuteCommentCreate(
       projectId: $projectId
       version: 1
       commandId: $commandId
-      personId: $personId
       type: COMMENT_CREATE
       parameters: { storyId: $storyId, content: $content, attachments: [] }
     }
@@ -69,15 +65,8 @@ async function graphqlPost(url, headers, body, timeoutMs = 5000) {
   }
 }
 
-export async function getMe({ queryUrl, apiKey, timeoutMs }) {
-  const json = await graphqlPost(queryUrl, { 'X-API-KEY': apiKey }, JSON.stringify({ query: GET_ME_QUERY }), timeoutMs)
-  assertNoErrors(json)
-  if (!json.data?.me?.id) throw new Error('Could not retrieve your account — check that your API key is valid.')
-  return json.data.me.id
-}
-
-export async function createComment({ mutationUrl, apiKey, projectId, personId, storyId, content, timeoutMs }) {
-  const variables = { projectId, commandId: randomUUID(), personId, storyId, content }
+export async function createComment({ mutationUrl, apiKey, projectId, storyId, content, timeoutMs }) {
+  const variables = { projectId, commandId: randomUUID(), storyId, content }
   const json = await graphqlPost(
     mutationUrl,
     { 'Authorization': `Bearer ${apiKey}` },

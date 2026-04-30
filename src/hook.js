@@ -1,7 +1,7 @@
 import readline from 'readline'
 import { createReadStream } from 'fs'
 import { getConfig, setGlobalConfig, setLocalConfig } from './configManager.js'
-import { getMe, createComment } from './apiClient.js'
+import { createComment } from './apiClient.js'
 import { parsePushInput } from './pushInputParser.js'
 import { getCommitsInRange } from './gitClient.js'
 import { buildCommentContent } from './commentBuilder.js'
@@ -29,21 +29,14 @@ function openTtyPrompt(question) {
   })
 }
 
-async function ensureCredentials({ queryUrl, lang, deps }) {
+async function ensureCredentials({ lang, deps }) {
   let apiKey = deps.getConfig('tracker.apiKey', { global: true })
-  let personId = deps.getConfig('tracker.personId', { global: true })
   let projectId = deps.getConfig('tracker.projectId', { local: true })
 
   if (!apiKey) {
     apiKey = await deps.prompt(t('promptApiKey', lang))
     deps.setGlobalConfig('tracker.apiKey', apiKey)
     process.stderr.write(t('apiKeyStored', lang) + '\n')
-    personId = null // force re-fetch after new key
-  }
-
-  if (!personId) {
-    personId = await deps.getMe({ queryUrl, apiKey })
-    deps.setGlobalConfig('tracker.personId', personId)
   }
 
   if (!projectId) {
@@ -52,16 +45,15 @@ async function ensureCredentials({ queryUrl, lang, deps }) {
     process.stderr.write(t('projectIdStored', lang) + '\n')
   }
 
-  return { apiKey, personId, projectId }
+  return { apiKey, projectId }
 }
 
-export async function runHook({ stdin, mutationUrl, queryUrl, remoteName, remoteUrl }, inject = {}) {
+export async function runHook({ stdin, mutationUrl, remoteName, remoteUrl }, inject = {}) {
   const lang = detectLang(process.env.LANG)
   const deps = {
     getConfig,
     setGlobalConfig,
     setLocalConfig,
-    getMe,
     createComment,
     getCommitsInRange,
     prompt: openTtyPrompt,
@@ -70,7 +62,6 @@ export async function runHook({ stdin, mutationUrl, queryUrl, remoteName, remote
 
   debug(`stdin: ${JSON.stringify(stdin)}`)
   debug(`mutationUrl: ${mutationUrl}`)
-  debug(`queryUrl: ${queryUrl}`)
 
   const ranges = parsePushInput(stdin)
   debug(`parsed ${ranges.length} ref range(s): ${JSON.stringify(ranges)}`)
@@ -99,19 +90,19 @@ export async function runHook({ stdin, mutationUrl, queryUrl, remoteName, remote
 
   let credentials
   try {
-    credentials = await ensureCredentials({ queryUrl, lang, deps })
+    credentials = await ensureCredentials({ lang, deps })
   } catch (err) {
     process.stderr.write(`tracker-boot-git-hooks: setup failed: ${err.message}\n`)
     return
   }
-  const { apiKey, personId, projectId } = credentials
-  debug(`projectId: ${projectId}  personId: ${personId}`)
+  const { apiKey, projectId } = credentials
+  debug(`projectId: ${projectId}`)
 
   for (const { commit, storyId } of work) {
     const content = buildCommentContent({ ...commit, remoteUrl })
     debug(`posting comment for story ${storyId}`)
     try {
-      await deps.createComment({ mutationUrl, apiKey, projectId, personId, storyId, content })
+      await deps.createComment({ mutationUrl, apiKey, projectId, storyId, content })
       process.stderr.write(t('commentPosted', lang, { storyId }) + '\n')
     } catch (err) {
       process.stderr.write(t('apiError', lang, { storyId, message: err.message }) + '\n')
