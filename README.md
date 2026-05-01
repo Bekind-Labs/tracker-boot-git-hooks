@@ -17,18 +17,8 @@ Automatically posts a comment on a Tracker Boot story when you push a commit tha
 
 ### インストール
 
-パッケージをグローバルインストールします（Bekind-Labs GitHubオーガニゼーションへのアクセスが必要です）。
-
-**SSH認証を使用する場合:**
-
 ```sh
-npm install -g git+ssh://git@github.com/Bekind-Labs/tracker-boot-git-hooks.git
-```
-
-**GitHub CLI（`gh auth login`）でHTTPS認証を使用する場合:**
-
-```sh
-npm install -g https://github.com/Bekind-Labs/tracker-boot-git-hooks.git
+npm install -g tracker-boot-git-hooks
 ```
 
 トラッキングしたいリポジトリ内で一度実行してください:
@@ -40,6 +30,17 @@ tracker-boot-git-hooks install
 初回プッシュ時にTracker Boot APIキーの入力を求められます。グローバルgit設定（`~/.gitconfig`）に保存され、以降は聞かれません。
 
 新しいリポジトリからの初回プッシュ時には、そのリポジトリのプロジェクトIDの入力も求められます。そのリポジトリの`.git/config`にローカル保存されます。
+
+---
+
+### アップデート
+
+```sh
+npm install -g tracker-boot-git-hooks
+tracker-boot-git-hooks install
+```
+
+`tracker-boot-git-hooks install`を実行することで、各リポジトリのフックファイルが新しいバージョンに書き換えられます。インストール済みの各フックにはこのコマンドが更新リマインダーとして埋め込まれています。
 
 ---
 
@@ -150,18 +151,8 @@ tracker-boot-git-hooks install --base-url https://trackerboot.staging.example.co
 
 ### 설치
 
-패키지를 전역으로 설치합니다（Bekind-Labs GitHub 조직에 대한 액세스가 필요합니다）。
-
-**SSH로 인증하는 경우:**
-
 ```sh
-npm install -g git+ssh://git@github.com/Bekind-Labs/tracker-boot-git-hooks.git
-```
-
-**GitHub CLI（`gh auth login`）로 HTTPS 인증하는 경우:**
-
-```sh
-npm install -g https://github.com/Bekind-Labs/tracker-boot-git-hooks.git
+npm install -g tracker-boot-git-hooks
 ```
 
 추적하려는 저장소 안에서 한 번 실행하세요:
@@ -173,6 +164,17 @@ tracker-boot-git-hooks install
 저장소에서 처음 푸시할 때 Tracker Boot API 키를 입력하라는 메시지가 표시됩니다。전역 git 설정（`~/.gitconfig`）에 저장되며 이후에는 묻지 않습니다。
 
 새로운 저장소에서 처음 푸시할 때는 해당 저장소의 프로젝트 ID도 입력하라는 메시지가 표시됩니다。해당 저장소의 `.git/config`에 로컬로 저장됩니다。
+
+---
+
+### 업데이트
+
+```sh
+npm install -g tracker-boot-git-hooks
+tracker-boot-git-hooks install
+```
+
+`tracker-boot-git-hooks install`을 실행하면 각 저장소의 훅 파일이 새 버전으로 다시 작성됩니다。설치된 각 훅에는 이 명령이 업데이트 알림으로 포함되어 있습니다。
 
 ---
 
@@ -283,18 +285,8 @@ tracker-boot-git-hooks install --base-url https://trackerboot.staging.example.co
 
 ### Installation
 
-Install the package globally (requires access to the Bekind-Labs GitHub org).
-
-**If you authenticate with SSH:**
-
 ```sh
-npm install -g git+ssh://git@github.com/Bekind-Labs/tracker-boot-git-hooks.git
-```
-
-**If you authenticate with HTTPS via the GitHub CLI (`gh auth login`):**
-
-```sh
-npm install -g https://github.com/Bekind-Labs/tracker-boot-git-hooks.git
+npm install -g tracker-boot-git-hooks
 ```
 
 Then run this once inside any repo you want to track:
@@ -306,6 +298,17 @@ tracker-boot-git-hooks install
 The first time you push from any repo, you'll be prompted for your Tracker Boot API key. It's saved to your global git config (`~/.gitconfig`) and never asked again.
 
 The first time you push from a *new* repo, you'll also be prompted for that repo's project ID. It's saved locally to that repo's `.git/config`.
+
+---
+
+### Updating
+
+```sh
+npm install -g tracker-boot-git-hooks
+tracker-boot-git-hooks install
+```
+
+Re-running `tracker-boot-git-hooks install` rewrites the hook file in each repo, picking up any changes to the hook template. A reminder with this exact command is embedded in every installed hook.
 
 ---
 

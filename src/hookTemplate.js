@@ -16,7 +16,7 @@ export function buildHookScript({ baseUrl }) {
   return [
     '#!/bin/sh',
     `${OUR_MARKER} pre-push hook (version: ${version})`,
-    `# Re-run \`npm install -g bekindlabs/tracker-boot-git-hooks && tracker-boot-git-hooks install\` to update.`,
+    `# To update: npm install -g tracker-boot-git-hooks && tracker-boot-git-hooks install`,
     `# Override with TRACKER_BASE_URL env var.`,
     `TRACKER_BASE_URL=${shellQuote(baseUrl)} \\`,
     `  tracker-boot-git-hooks hook "$@"`,

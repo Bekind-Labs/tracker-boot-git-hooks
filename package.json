@@ -1,24 +1,41 @@
 {
   "name": "tracker-boot-git-hooks",
   "version": "0.1.0",
-  "description": "Git hooks for tracker-boot — auto-comments on stories when commits are pushed",
+  "description": "Git hooks for Tracker Boot — automatically comments on stories when commits are pushed",
   "type": "module",
   "bin": {
     "tracker-boot-git-hooks": "./bin/cli.js"
   },
+  "files": [
+    "bin/",
+    "src/"
+  ],
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest"
   },
-  "devDependencies": {
-    "vitest": "^2.1.0"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Bekind-Labs/tracker-boot-git-hooks.git"
   },
+  "homepage": "https://github.com/Bekind-Labs/tracker-boot-git-hooks#readme",
+  "keywords": [
+    "git",
+    "hooks",
+    "pre-push",
+    "tracker",
+    "tracker-boot"
+  ],
+  "author": "BeKind Labs",
+  "license": "MIT",
   "engines": {
     "node": ">=18.0.0"
   },
   "os": ["darwin", "linux"],
-  "license": "UNLICENSED",
   "dependencies": {
     "boxen": "^8.0.1"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.0"
   }
 }
