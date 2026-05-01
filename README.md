@@ -35,12 +35,20 @@ tracker-boot-git-hooks install
 
 ### アップデート
 
+プッシュのたびに、フックはnpmレジストリを確認し、新しいバージョンが利用可能な場合はstderrに通知を表示します:
+
+```
+tracker-boot: アップデートがあります 1.2.0 (現在: 1.1.0)。実行: npm install -g tracker-boot-git-hooks
+```
+
+アップデートするには、2つのコマンドを実行します:
+
 ```sh
 npm install -g tracker-boot-git-hooks
 tracker-boot-git-hooks install
 ```
 
-`tracker-boot-git-hooks install`を実行することで、各リポジトリのフックファイルが新しいバージョンに書き換えられます。インストール済みの各フックにはこのコマンドが更新リマインダーとして埋め込まれています。
+`npm install -g`でCLIを更新し、`tracker-boot-git-hooks install`で各リポジトリのフックファイルを新しいバージョンに書き換えます。
 
 ---
 
@@ -169,12 +177,20 @@ tracker-boot-git-hooks install
 
 ### 업데이트
 
+푸시할 때마다 훅이 npm 레지스트리를 확인하고, 새 버전이 있으면 stderr에 알림을 표시합니다:
+
+```
+tracker-boot: 업데이트 가능 1.2.0 (현재: 1.1.0). 실행: npm install -g tracker-boot-git-hooks
+```
+
+업데이트하려면 두 명령을 실행하세요:
+
 ```sh
 npm install -g tracker-boot-git-hooks
 tracker-boot-git-hooks install
 ```
 
-`tracker-boot-git-hooks install`을 실행하면 각 저장소의 훅 파일이 새 버전으로 다시 작성됩니다。설치된 각 훅에는 이 명령이 업데이트 알림으로 포함되어 있습니다。
+`npm install -g`로 CLI를 업데이트하고, `tracker-boot-git-hooks install`로 각 저장소의 훅 파일을 새 버전으로 다시 작성합니다。
 
 ---
 
@@ -303,12 +319,20 @@ The first time you push from a *new* repo, you'll also be prompted for that repo
 
 ### Updating
 
+Every push, the hook checks npm for a newer version. If one is available, it prints a nudge to stderr after posting comments:
+
+```
+tracker-boot: update available 1.2.0 (current: 1.1.0). Run: npm install -g tracker-boot-git-hooks
+```
+
+To update, run both commands:
+
 ```sh
 npm install -g tracker-boot-git-hooks
 tracker-boot-git-hooks install
 ```
 
-Re-running `tracker-boot-git-hooks install` rewrites the hook file in each repo, picking up any changes to the hook template. A reminder with this exact command is embedded in every installed hook.
+`npm install -g` updates the CLI, and `tracker-boot-git-hooks install` rewrites the hook file in each repo to pick up any changes to the hook template.
 
 ---
 

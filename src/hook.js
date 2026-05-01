@@ -7,6 +7,7 @@ import { getCommitsInRange } from './gitClient.js'
 import { buildCommentContent } from './commentBuilder.js'
 import { extractStoryIds } from './storyIdExtractor.js'
 import { detectLang, t } from './i18n.js'
+import { checkForUpdate } from './updateChecker.js'
 
 function debug(msg) {
   if (process.env.TRACKER_DEBUG) {
@@ -65,8 +66,11 @@ export async function runHook({ stdin, mutationUrl, queryUrl, remoteName, remote
     createComment,
     getCommitsInRange,
     prompt: openTtyPrompt,
+    checkForUpdate,
     ...inject,
   }
+
+  const updateCheck = deps.checkForUpdate()
 
   debug(`stdin: ${JSON.stringify(stdin)}`)
   debug(`mutationUrl: ${mutationUrl}`)
@@ -116,5 +120,10 @@ export async function runHook({ stdin, mutationUrl, queryUrl, remoteName, remote
     } catch (err) {
       process.stderr.write(t('apiError', lang, { storyId, message: err.message }) + '\n')
     }
+  }
+
+  const update = await updateCheck
+  if (update) {
+    process.stderr.write(t('updateAvailable', lang, { latest: update.latest, current: update.current }) + '\n')
   }
 }
