@@ -14,21 +14,27 @@ function isNewer(latest, current) {
 
 export async function checkForUpdate({ timeoutMs = 2000, fetch: _fetch = fetch } = {}) {
   const current = require('../package.json').version
-  try {
-    const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), timeoutMs)
-    let res
+  const controller = new AbortController()
+  const deadline = new Promise(resolve => {
+    controller.signal.addEventListener('abort', () => resolve(null))
+  })
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  const attempt = (async () => {
     try {
-      res = await _fetch(NPM_REGISTRY_URL, { signal: controller.signal })
-    } finally {
-      clearTimeout(timer)
+      let res
+      try {
+        res = await _fetch(NPM_REGISTRY_URL, { signal: controller.signal })
+      } finally {
+        clearTimeout(timer)
+      }
+      if (!res.ok) return null
+      const data = await res.json()
+      const latest = data?.version
+      if (typeof latest !== 'string' || !isNewer(latest, current)) return null
+      return { latest, current }
+    } catch {
+      return null
     }
-    if (!res.ok) return null
-    const data = await res.json()
-    const latest = data?.version
-    if (typeof latest !== 'string' || !isNewer(latest, current)) return null
-    return { latest, current }
-  } catch {
-    return null
-  }
+  })()
+  return Promise.race([attempt, deadline])
 }
