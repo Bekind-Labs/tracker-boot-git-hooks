@@ -144,7 +144,7 @@ tracker-boot-git-hooks install --base-url https://trackerboot.staging.example.co
 
 ### TODO
 
-- [ ] 世界へのリリース 🌍
+- [x] 世界へのリリース 🌍
 - [ ] キーワードに基づくストーリー状態変更のサポート
 - [ ] より多くのGitホスティングプロバイダーのサポート（GitLab、Bitbucketなど）
 
@@ -286,7 +286,7 @@ tracker-boot-git-hooks install --base-url https://trackerboot.staging.example.co
 
 ### TODO
 
-- [ ] 세상에 출시하기 🌍
+- [x] 세상에 출시하기 🌍
 - [ ] 키워드를 기반으로 한 스토리 상태 변경 지원
 - [ ] 더 많은 Git 호스팅 제공업체 지원（GitLab、Bitbucket 등）
 
@@ -428,6 +428,6 @@ The hook never blocks a push — if the API is unreachable or returns an error, 
 
 ### TODO
 
-- [ ] Release to the world 🌍
+- [x] Release to the world 🌍
 - [ ] Support story state changes based on keywords
 - [ ] Support more Git hosting providers (GitLab, Bitbucket, etc.)

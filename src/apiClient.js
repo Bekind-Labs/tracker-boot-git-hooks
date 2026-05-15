@@ -37,7 +37,7 @@ function assertNoErrors(json) {
   if (json.errors?.length) throw new Error(json.errors[0].message)
 }
 
-async function graphqlPost(url, headers, body, timeoutMs = 5000) {
+async function graphqlPost(url, headers, body, timeoutMs = 2000) {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeoutMs)
   let res
@@ -49,7 +49,7 @@ async function graphqlPost(url, headers, body, timeoutMs = 5000) {
       signal: controller.signal,
     })
   } catch (err) {
-    throw new Error(err.name === 'AbortError' ? 'request timed out after 5s' : err.message)
+    throw new Error(err.name === 'AbortError' ? `request timed out after ${timeoutMs}ms` : err.message)
   } finally {
     clearTimeout(timer)
   }
