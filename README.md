@@ -17,18 +17,8 @@ Automatically posts a comment on a Tracker Boot story when you push a commit tha
 
 ### インストール
 
-パッケージをグローバルインストールします（Bekind-Labs GitHubオーガニゼーションへのアクセスが必要です）。
-
-**SSH認証を使用する場合:**
-
 ```sh
-npm install -g git+ssh://git@github.com/Bekind-Labs/tracker-boot-git-hooks.git
-```
-
-**GitHub CLI（`gh auth login`）でHTTPS認証を使用する場合:**
-
-```sh
-npm install -g https://github.com/Bekind-Labs/tracker-boot-git-hooks.git
+npm install -g tracker-boot-git-hooks
 ```
 
 トラッキングしたいリポジトリ内で一度実行してください:
@@ -40,6 +30,25 @@ tracker-boot-git-hooks install
 初回プッシュ時にTracker Boot APIキーの入力を求められます。グローバルgit設定（`~/.gitconfig`）に保存され、以降は聞かれません。
 
 新しいリポジトリからの初回プッシュ時には、そのリポジトリのプロジェクトIDの入力も求められます。そのリポジトリの`.git/config`にローカル保存されます。
+
+---
+
+### アップデート
+
+プッシュのたびに、フックはnpmレジストリを確認し、新しいバージョンが利用可能な場合はstderrに通知を表示します:
+
+```
+tracker-boot: アップデートがあります 1.2.0 (現在: 1.1.0)。実行: npm install -g tracker-boot-git-hooks
+```
+
+アップデートするには、2つのコマンドを実行します:
+
+```sh
+npm install -g tracker-boot-git-hooks
+tracker-boot-git-hooks install
+```
+
+`npm install -g`でCLIを更新し、`tracker-boot-git-hooks install`で各リポジトリのフックファイルを新しいバージョンに書き換えます。
 
 ---
 
@@ -150,18 +159,8 @@ tracker-boot-git-hooks install --base-url https://trackerboot.staging.example.co
 
 ### 설치
 
-패키지를 전역으로 설치합니다（Bekind-Labs GitHub 조직에 대한 액세스가 필요합니다）。
-
-**SSH로 인증하는 경우:**
-
 ```sh
-npm install -g git+ssh://git@github.com/Bekind-Labs/tracker-boot-git-hooks.git
-```
-
-**GitHub CLI（`gh auth login`）로 HTTPS 인증하는 경우:**
-
-```sh
-npm install -g https://github.com/Bekind-Labs/tracker-boot-git-hooks.git
+npm install -g tracker-boot-git-hooks
 ```
 
 추적하려는 저장소 안에서 한 번 실행하세요:
@@ -173,6 +172,25 @@ tracker-boot-git-hooks install
 저장소에서 처음 푸시할 때 Tracker Boot API 키를 입력하라는 메시지가 표시됩니다。전역 git 설정（`~/.gitconfig`）에 저장되며 이후에는 묻지 않습니다。
 
 새로운 저장소에서 처음 푸시할 때는 해당 저장소의 프로젝트 ID도 입력하라는 메시지가 표시됩니다。해당 저장소의 `.git/config`에 로컬로 저장됩니다。
+
+---
+
+### 업데이트
+
+푸시할 때마다 훅이 npm 레지스트리를 확인하고, 새 버전이 있으면 stderr에 알림을 표시합니다:
+
+```
+tracker-boot: 업데이트 가능 1.2.0 (현재: 1.1.0). 실행: npm install -g tracker-boot-git-hooks
+```
+
+업데이트하려면 두 명령을 실행하세요:
+
+```sh
+npm install -g tracker-boot-git-hooks
+tracker-boot-git-hooks install
+```
+
+`npm install -g`로 CLI를 업데이트하고, `tracker-boot-git-hooks install`로 각 저장소의 훅 파일을 새 버전으로 다시 작성합니다。
 
 ---
 
@@ -283,18 +301,8 @@ tracker-boot-git-hooks install --base-url https://trackerboot.staging.example.co
 
 ### Installation
 
-Install the package globally (requires access to the Bekind-Labs GitHub org).
-
-**If you authenticate with SSH:**
-
 ```sh
-npm install -g git+ssh://git@github.com/Bekind-Labs/tracker-boot-git-hooks.git
-```
-
-**If you authenticate with HTTPS via the GitHub CLI (`gh auth login`):**
-
-```sh
-npm install -g https://github.com/Bekind-Labs/tracker-boot-git-hooks.git
+npm install -g tracker-boot-git-hooks
 ```
 
 Then run this once inside any repo you want to track:
@@ -306,6 +314,25 @@ tracker-boot-git-hooks install
 The first time you push from any repo, you'll be prompted for your Tracker Boot API key. It's saved to your global git config (`~/.gitconfig`) and never asked again.
 
 The first time you push from a *new* repo, you'll also be prompted for that repo's project ID. It's saved locally to that repo's `.git/config`.
+
+---
+
+### Updating
+
+Every push, the hook checks npm for a newer version. If one is available, it prints a nudge to stderr after posting comments:
+
+```
+tracker-boot: update available 1.2.0 (current: 1.1.0). Run: npm install -g tracker-boot-git-hooks
+```
+
+To update, run both commands:
+
+```sh
+npm install -g tracker-boot-git-hooks
+tracker-boot-git-hooks install
+```
+
+`npm install -g` updates the CLI, and `tracker-boot-git-hooks install` rewrites the hook file in each repo to pick up any changes to the hook template.
 
 ---
 

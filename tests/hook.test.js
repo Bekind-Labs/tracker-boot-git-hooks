@@ -27,6 +27,7 @@ function makeDeps(overrides = {}) {
     createComment: vi.fn().mockResolvedValue({}),
     getCommitsInRange: vi.fn().mockReturnValue([]),
     prompt: vi.fn().mockResolvedValue('user-input'),
+    checkForUpdate: vi.fn().mockResolvedValue(null),
     ...overrides,
   }
 }
@@ -141,6 +142,34 @@ describe('runHook', () => {
     expect(process.stderr.write).toHaveBeenCalledWith(
       expect.stringContaining('comment posted on story 123456789')
     )
+  })
+
+  it('writes update nudge to stderr when a newer version is available', async () => {
+    const deps = withConfig(makeDeps({
+      checkForUpdate: vi.fn().mockResolvedValue({ latest: '99.0.0', current: '0.1.0' }),
+    }))
+    deps.getCommitsInRange.mockReturnValue([STORY_COMMIT])
+
+    await runHook(HOOK_ARGS, deps)
+
+    expect(process.stderr.write).toHaveBeenCalledWith(
+      expect.stringContaining('99.0.0')
+    )
+    expect(process.stderr.write).toHaveBeenCalledWith(
+      expect.stringContaining('npm install -g tracker-boot-git-hooks')
+    )
+  })
+
+  it('does not write update nudge when already on latest', async () => {
+    const deps = withConfig(makeDeps({
+      checkForUpdate: vi.fn().mockResolvedValue(null),
+    }))
+    deps.getCommitsInRange.mockReturnValue([STORY_COMMIT])
+
+    await runHook(HOOK_ARGS, deps)
+
+    const calls = process.stderr.write.mock.calls.map(([s]) => s)
+    expect(calls.every(s => !s.includes('npm install -g'))).toBe(true)
   })
 
   it('writes debug lines to stderr when TRACKER_DEBUG is set', async () => {
