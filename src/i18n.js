@@ -32,13 +32,13 @@ const MESSAGES = {
 }
 
 export function detectLang(langEnv) {
-  if (!langEnv) return 'en'
+  if (!langEnv) return 'ja'
   const code = langEnv.split('_')[0].toLowerCase()
-  return MESSAGES[code] ? code : 'en'
+  return MESSAGES[code] ? code : 'ja'
 }
 
 export function t(key, lang, vars = {}) {
-  const messages = MESSAGES[lang] ?? MESSAGES.en
+  const messages = MESSAGES[lang] ?? MESSAGES.ja
   const template = messages[key] ?? MESSAGES.en[key] ?? key
   return template.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? `{${k}}`)
 }

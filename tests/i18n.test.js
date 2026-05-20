@@ -15,8 +15,8 @@ describe('detectLang', () => {
   it('returns ko for ko_KR', () => expect(detectLang('ko_KR.UTF-8')).toBe('ko'))
   it('returns ja for ja_JP', () => expect(detectLang('ja_JP.UTF-8')).toBe('ja'))
   it('returns en for en_US', () => expect(detectLang('en_US.UTF-8')).toBe('en'))
-  it('returns en for empty string', () => expect(detectLang('')).toBe('en'))
-  it('returns en for undefined', () => expect(detectLang(undefined)).toBe('en'))
+  it('returns ja for empty string', () => expect(detectLang('')).toBe('ja'))
+  it('returns ja for undefined', () => expect(detectLang(undefined)).toBe('ja'))
 })
 
 describe('t', () => {
@@ -37,8 +37,8 @@ describe('t', () => {
     }
   })
 
-  it('falls back to English for unknown lang', () => {
-    expect(t('promptApiKey', 'fr')).toBe(t('promptApiKey', 'en'))
+  it('falls back to Japanese for unknown lang', () => {
+    expect(t('promptApiKey', 'fr')).toBe(t('promptApiKey', 'ja'))
   })
 
   it('supports template interpolation', () => {
