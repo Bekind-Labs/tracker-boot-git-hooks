@@ -120,6 +120,19 @@ tracker-boot-git-hooks install --base-url https://trackerboot.staging.example.co
 
 ---
 
+### 環境変数
+
+git設定の代わりに環境変数で認証情報を指定できます — CodespacesなどのGit設定が使えない非インタラクティブ環境で便利です:
+
+| 変数 | 置き換えるもの |
+|---|---|
+| `TRACKER_BOOT_API_KEY` | `tracker.apiKey` グローバルgit設定 |
+| `TRACKER_BOOT_PROJECT_ID` | `tracker.projectId` ローカルgit設定 |
+
+いずれかの変数が設定されている場合、フックはその値を直接使用し、対話型プロンプトと保存ステップをスキップします。
+
+---
+
 ### 既知の制限事項
 
 **コミットリンクはGitHubのみ対応。** リモートがGitHub URL（HTTPSまたはSSH）の場合のみ、コメントにハイパーリンク付きのコミットSHAが含まれます。その他のホスト（GitLab、Bitbucketなど）ではプレーンテキストで表示されます。
@@ -262,6 +275,19 @@ tracker-boot-git-hooks install --base-url https://trackerboot.staging.example.co
 
 ---
 
+### 환경 변수
+
+git 설정 대신 환경 변수로 인증 정보를 제공할 수 있습니다 — Codespaces 등 비대화형 환경에서 유용합니다:
+
+| 변수 | 대체 항목 |
+|---|---|
+| `TRACKER_BOOT_API_KEY` | `tracker.apiKey` 전역 git 설정 |
+| `TRACKER_BOOT_PROJECT_ID` | `tracker.projectId` 로컬 git 설정 |
+
+변수가 설정된 경우 훅은 해당 값을 직접 사용하며 대화형 프롬프트와 저장 단계를 건너뜁니다。
+
+---
+
 ### 알려진 제한 사항
 
 **커밋 링크는 GitHub 전용입니다。** 리모트가 GitHub URL（HTTPS 또는 SSH）인 경우에만 댓글에 하이퍼링크된 커밋 SHA가 포함됩니다。다른 호스트（GitLab、Bitbucket 등）에서는 일반 텍스트로 표시됩니다。
@@ -401,6 +427,19 @@ To install a hook permanently pointed at a non-standard instance:
 ```sh
 tracker-boot-git-hooks install --base-url https://trackerboot.staging.example.com
 ```
+
+---
+
+### Environment variables
+
+Credentials can be supplied via environment variables instead of git config — useful in Codespaces or other non-interactive environments where git config isn't available:
+
+| Variable | Replaces |
+|---|---|
+| `TRACKER_BOOT_API_KEY` | `tracker.apiKey` global git config |
+| `TRACKER_BOOT_PROJECT_ID` | `tracker.projectId` local git config |
+
+When a variable is set, the hook uses it directly and skips the interactive prompt and storing step for that credential.
 
 ---
 

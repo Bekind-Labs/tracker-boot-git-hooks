@@ -31,8 +31,8 @@ function openTtyPrompt(question) {
 }
 
 async function ensureCredentials({ lang, deps }) {
-  let apiKey = deps.getConfig('tracker.apiKey', { global: true })
-  let projectId = deps.getConfig('tracker.projectId', { local: true })
+  let apiKey = process.env.TRACKER_BOOT_API_KEY || deps.getConfig('tracker.apiKey', { global: true })
+  let projectId = process.env.TRACKER_BOOT_PROJECT_ID || deps.getConfig('tracker.projectId', { local: true })
 
   if (!apiKey) {
     apiKey = await deps.prompt(t('promptApiKey', lang))

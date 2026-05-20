@@ -9,6 +9,8 @@ beforeEach(() => {
 afterEach(() => {
   vi.restoreAllMocks()
   delete process.env.TRACKER_DEBUG
+  delete process.env.TRACKER_BOOT_API_KEY
+  delete process.env.TRACKER_BOOT_PROJECT_ID
 })
 
 const HOOK_ARGS = {
@@ -207,5 +209,54 @@ describe('runHook', () => {
 
     expect(deps.prompt).toHaveBeenCalled()
     expect(deps.setLocalConfig).toHaveBeenCalledWith('tracker.projectId', 'user-input')
+  })
+
+  it('uses TRACKER_BOOT_API_KEY env var instead of git config', async () => {
+    process.env.TRACKER_BOOT_API_KEY = 'env-api-key'
+    const deps = makeDeps()
+    deps.getConfig.mockImplementation((key, { local: isLocal } = {}) => {
+      if (key === 'tracker.projectId' && isLocal) return 'proj-1'
+      return null
+    })
+    deps.getCommitsInRange.mockReturnValue([STORY_COMMIT])
+
+    await runHook(HOOK_ARGS, deps)
+
+    expect(deps.createComment).toHaveBeenCalledWith(
+      expect.objectContaining({ apiKey: 'env-api-key' })
+    )
+    expect(deps.prompt).not.toHaveBeenCalled()
+    expect(deps.setGlobalConfig).not.toHaveBeenCalled()
+  })
+
+  it('uses TRACKER_BOOT_PROJECT_ID env var instead of git config', async () => {
+    process.env.TRACKER_BOOT_PROJECT_ID = 'env-proj-id'
+    const deps = makeDeps()
+    deps.getConfig.mockImplementation((key, { global: isGlobal } = {}) => {
+      if (key === 'tracker.apiKey' && isGlobal) return 'my-key'
+      return null
+    })
+    deps.getCommitsInRange.mockReturnValue([STORY_COMMIT])
+
+    await runHook(HOOK_ARGS, deps)
+
+    expect(deps.createComment).toHaveBeenCalledWith(
+      expect.objectContaining({ projectId: 'env-proj-id' })
+    )
+    expect(deps.prompt).not.toHaveBeenCalled()
+    expect(deps.setLocalConfig).not.toHaveBeenCalled()
+  })
+
+  it('env vars take precedence over git config values', async () => {
+    process.env.TRACKER_BOOT_API_KEY = 'env-api-key'
+    process.env.TRACKER_BOOT_PROJECT_ID = 'env-proj-id'
+    const deps = withConfig(makeDeps())
+    deps.getCommitsInRange.mockReturnValue([STORY_COMMIT])
+
+    await runHook(HOOK_ARGS, deps)
+
+    expect(deps.createComment).toHaveBeenCalledWith(
+      expect.objectContaining({ apiKey: 'env-api-key', projectId: 'env-proj-id' })
+    )
   })
 })
