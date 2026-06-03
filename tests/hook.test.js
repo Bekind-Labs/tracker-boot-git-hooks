@@ -20,6 +20,7 @@ const HOOK_ARGS = {
 }
 
 const STORY_COMMIT = { sha: 'abc123456789', subject: '[#123456789] fix bug', body: '' }
+const FINISH_COMMIT = { sha: 'abc123456789', subject: '[finished #123456789] the login flow', body: '' }
 
 function makeDeps(overrides = {}) {
   return {
@@ -27,6 +28,7 @@ function makeDeps(overrides = {}) {
     setGlobalConfig: vi.fn(),
     setLocalConfig: vi.fn(),
     createComment: vi.fn().mockResolvedValue({}),
+    updateStoryStatus: vi.fn().mockResolvedValue({}),
     getCommitsInRange: vi.fn().mockReturnValue([]),
     prompt: vi.fn().mockResolvedValue('user-input'),
     checkForUpdate: vi.fn().mockResolvedValue(null),
@@ -258,5 +260,100 @@ describe('runHook', () => {
     expect(deps.createComment).toHaveBeenCalledWith(
       expect.objectContaining({ apiKey: 'env-api-key', projectId: 'env-proj-id' })
     )
+  })
+
+  it('does not call updateStoryStatus when commit has no finish keyword', async () => {
+    const deps = withConfig(makeDeps())
+    deps.getCommitsInRange.mockReturnValue([STORY_COMMIT])
+
+    await runHook(HOOK_ARGS, deps)
+
+    expect(deps.updateStoryStatus).not.toHaveBeenCalled()
+  })
+
+  it.each(['finished', 'finish', 'finishes', 'FINISHED'])(
+    'calls updateStoryStatus with status Finished when bracket contains "%s"',
+    async (keyword) => {
+      const deps = withConfig(makeDeps())
+      deps.getCommitsInRange.mockReturnValue([
+        { sha: 'abc123456789', subject: `[${keyword} #123456789] the login flow`, body: '' },
+      ])
+
+      await runHook(HOOK_ARGS, deps)
+
+      expect(deps.updateStoryStatus).toHaveBeenCalledOnce()
+      expect(deps.updateStoryStatus).toHaveBeenCalledWith(
+        expect.objectContaining({ storyId: '123456789', status: 'Finished', projectId: 'proj-1' })
+      )
+    }
+  )
+
+  it('does not call updateStoryStatus when finish keyword is outside the brackets', async () => {
+    const deps = withConfig(makeDeps())
+    deps.getCommitsInRange.mockReturnValue([
+      { sha: 'abc123456789', subject: '[#123456789] finished the login flow', body: '' },
+    ])
+
+    await runHook(HOOK_ARGS, deps)
+
+    expect(deps.updateStoryStatus).not.toHaveBeenCalled()
+  })
+
+  it('also posts a comment when a finish keyword is present', async () => {
+    const deps = withConfig(makeDeps())
+    deps.getCommitsInRange.mockReturnValue([
+      FINISH_COMMIT,
+    ])
+
+    await runHook(HOOK_ARGS, deps)
+
+    expect(deps.createComment).toHaveBeenCalledOnce()
+    expect(deps.updateStoryStatus).toHaveBeenCalledOnce()
+  })
+
+  it('only updates status for story IDs whose bracket contains a finish keyword', async () => {
+    const deps = withConfig(makeDeps())
+    deps.getCommitsInRange.mockReturnValue([
+      { sha: 'abc123456789', subject: '[finished #111111111] [#222222222] msg', body: '' },
+    ])
+
+    await runHook(HOOK_ARGS, deps)
+
+    expect(deps.updateStoryStatus).toHaveBeenCalledOnce()
+    expect(deps.updateStoryStatus).toHaveBeenCalledWith(expect.objectContaining({ storyId: '111111111' }))
+  })
+
+  it('updates status for each story ID whose bracket contains a finish keyword', async () => {
+    const deps = withConfig(makeDeps())
+    deps.getCommitsInRange.mockReturnValue([
+      { sha: 'abc123456789', subject: '[finished #111111111] [finished #222222222] msg', body: '' },
+    ])
+
+    await runHook(HOOK_ARGS, deps)
+
+    expect(deps.updateStoryStatus).toHaveBeenCalledTimes(2)
+    expect(deps.updateStoryStatus).toHaveBeenCalledWith(expect.objectContaining({ storyId: '111111111' }))
+    expect(deps.updateStoryStatus).toHaveBeenCalledWith(expect.objectContaining({ storyId: '222222222' }))
+  })
+
+  it('continues after updateStoryStatus failure and writes error to stderr', async () => {
+    const deps = withConfig(makeDeps())
+    deps.getCommitsInRange.mockReturnValue([
+      FINISH_COMMIT,
+    ])
+    deps.updateStoryStatus.mockRejectedValueOnce(new Error('status update failed'))
+
+    await expect(runHook(HOOK_ARGS, deps)).resolves.not.toThrow()
+    expect(process.stderr.write).toHaveBeenCalledWith(expect.stringContaining('status update failed'))
+  })
+
+  it('writes a single combined message to stderr when comment and status update both succeed', async () => {
+    const deps = withConfig(makeDeps())
+    deps.getCommitsInRange.mockReturnValue([FINISH_COMMIT])
+
+    await runHook(HOOK_ARGS, deps)
+
+    expect(process.stderr.write).toHaveBeenCalledOnce()
+    expect(process.stderr.write).toHaveBeenCalledWith(expect.stringContaining('123456789'))
   })
 })

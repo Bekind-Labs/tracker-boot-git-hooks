@@ -1,37 +1,22 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
 import { createServer } from 'http'
-import { createComment } from '../src/apiClient.js'
+import { createComment, updateStoryStatus } from '../src/apiClient.js'
 
-describe('graphqlPost timeout', () => {
-  let slowServer
-  let slowPort
-
-  beforeAll(async () => {
-    await new Promise((resolve) => {
-      slowServer = createServer((_req, _res) => { /* never respond */ })
-      slowServer.listen(0, () => {
-        slowPort = slowServer.address().port
-        resolve()
-      })
-    })
-  })
-
-  afterAll(() => new Promise((resolve) => slowServer.close(resolve)))
-
-  it('throws "request timed out" when the server does not respond within timeoutMs', async () => {
-    const url = `http://localhost:${slowPort}/graphql`
-    await expect(
-      createComment({ mutationUrl: url, apiKey: 'x', projectId: 'p', storyId: '123456789', content: 'hi', timeoutMs: 50 })
-    ).rejects.toThrow('request timed out')
-  })
-})
-
+let slowServer
+let slowPort
 let server
 let port
 let captured
 let nextResponse
 
 beforeAll(async () => {
+  await new Promise((resolve) => {
+    slowServer = createServer((_req, _res) => { /* never respond */ })
+    slowServer.listen(0, () => {
+      slowPort = slowServer.address().port
+      resolve()
+    })
+  })
   await new Promise((resolve) => {
     server = createServer((req, res) => {
       let body = ''
@@ -50,7 +35,10 @@ beforeAll(async () => {
   })
 })
 
-afterAll(() => server.close())
+afterAll(() => Promise.all([
+  new Promise((resolve) => slowServer.close(resolve)),
+  new Promise((resolve) => server.close(resolve)),
+]))
 
 beforeEach(() => {
   captured = null
@@ -110,5 +98,57 @@ describe('createComment', () => {
   it('throws on non-2xx even when body is valid JSON without an errors field', async () => {
     nextResponse = () => ({ status: 429, payload: JSON.stringify({ message: 'Rate limited' }) })
     await expect(createComment({ mutationUrl: url(), ...PARAMS })).rejects.toThrow('HTTP 429')
+  })
+
+  it('throws "request timed out" when the server does not respond within timeoutMs', async () => {
+    await expect(
+      createComment({ mutationUrl: `http://localhost:${slowPort}/graphql`, ...PARAMS, timeoutMs: 50 })
+    ).rejects.toThrow('request timed out')
+  })
+})
+
+describe('updateStoryStatus', () => {
+  const PARAMS = {
+    apiKey: 'secret',
+    projectId: 'proj-1',
+    storyId: '123456789',
+    status: 'Finished',
+  }
+
+  it('sends Authorization Bearer header', async () => {
+    nextResponse = () => ({
+      status: 200,
+      payload: JSON.stringify({ data: { executeCommand: { data: { id: '123456789', status: 'Finished' } } } }),
+    })
+    await updateStoryStatus({ mutationUrl: url(), ...PARAMS })
+    expect(captured.headers['authorization']).toBe('Bearer secret')
+  })
+
+  it('sends projectId, storyId as id, status, and a UUID commandId in variables', async () => {
+    nextResponse = () => ({
+      status: 200,
+      payload: JSON.stringify({ data: { executeCommand: { data: { id: '123456789', status: 'Finished' } } } }),
+    })
+    await updateStoryStatus({ mutationUrl: url(), ...PARAMS })
+    const { variables } = JSON.parse(captured.body)
+    expect(variables.projectId).toBe('proj-1')
+    expect(variables.id).toBe('123456789')
+    expect(variables.storyId).toBeUndefined()
+    expect(variables.status).toBe('Finished')
+    expect(variables.commandId).toMatch(/^[0-9a-f-]{36}$/)
+  })
+
+  it('throws on GraphQL error response', async () => {
+    nextResponse = () => ({
+      status: 200,
+      payload: JSON.stringify({ errors: [{ message: 'Story not found' }] }),
+    })
+    await expect(updateStoryStatus({ mutationUrl: url(), ...PARAMS })).rejects.toThrow('Story not found')
+  })
+
+  it('throws "request timed out" when the server does not respond within timeoutMs', async () => {
+    await expect(
+      updateStoryStatus({ mutationUrl: `http://localhost:${slowPort}/graphql`, ...PARAMS, timeoutMs: 50 })
+    ).rejects.toThrow('request timed out')
   })
 })

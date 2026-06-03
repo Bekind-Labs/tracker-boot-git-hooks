@@ -1,11 +1,11 @@
 import readline from 'readline'
 import { createReadStream } from 'fs'
 import { getConfig, setGlobalConfig, setLocalConfig } from './configManager.js'
-import { createComment } from './apiClient.js'
+import { createComment, updateStoryStatus } from './apiClient.js'
 import { parsePushInput } from './pushInputParser.js'
 import { getCommitsInRange } from './gitClient.js'
 import { buildCommentContent } from './commentBuilder.js'
-import { extractStoryIds } from './storyIdExtractor.js'
+import { extractStoryRefs } from './storyIdExtractor.js'
 import { detectLang, t } from './i18n.js'
 import { checkForUpdate } from './updateChecker.js'
 
@@ -56,6 +56,7 @@ export async function runHook({ stdin, mutationUrl, remoteName, remoteUrl }, inj
     setGlobalConfig,
     setLocalConfig,
     createComment,
+    updateStoryStatus,
     getCommitsInRange,
     prompt: openTtyPrompt,
     checkForUpdate,
@@ -82,10 +83,10 @@ export async function runHook({ stdin, mutationUrl, remoteName, remoteUrl }, inj
     debug(`found ${commits.length} commit(s) in ${remoteSha}..${localSha}`)
     for (const commit of commits) {
       const text = commit.body ? `${commit.subject}\n${commit.body}` : commit.subject
-      const storyIds = extractStoryIds(text)
-      debug(`commit ${commit.sha}: subject="${commit.subject}" storyIds=${JSON.stringify(storyIds)}`)
-      for (const storyId of storyIds) {
-        work.push({ commit, storyId })
+      const refs = extractStoryRefs(text)
+      debug(`commit ${commit.sha}: subject="${commit.subject}" refs=${JSON.stringify(refs)}`)
+      for (const { id: storyId, shouldFinish } of refs) {
+        work.push({ commit, storyId, shouldFinish })
       }
     }
   }
@@ -102,14 +103,27 @@ export async function runHook({ stdin, mutationUrl, remoteName, remoteUrl }, inj
   const { apiKey, projectId } = credentials
   debug(`projectId: ${projectId}`)
 
-  for (const { commit, storyId } of work) {
+  for (const { commit, storyId, shouldFinish } of work) {
     const content = buildCommentContent({ ...commit, remoteUrl })
     debug(`posting comment for story ${storyId}`)
+    let commentOk = false
     try {
       await deps.createComment({ mutationUrl, apiKey, projectId, storyId, content })
-      process.stderr.write(t('commentPosted', lang, { storyId }) + '\n')
+      commentOk = true
     } catch (err) {
       process.stderr.write(t('apiError', lang, { storyId, message: err.message }) + '\n')
+    }
+    if (commentOk && shouldFinish) {
+      debug(`updating status to Finished for story ${storyId}`)
+      try {
+        await deps.updateStoryStatus({ mutationUrl, apiKey, projectId, storyId, status: 'Finished' })
+        process.stderr.write(t('commentPostedAndFinished', lang, { storyId }) + '\n')
+      } catch (err) {
+        process.stderr.write(t('commentPosted', lang, { storyId }) + '\n')
+        process.stderr.write(t('statusUpdateError', lang, { storyId, message: err.message }) + '\n')
+      }
+    } else if (commentOk) {
+      process.stderr.write(t('commentPosted', lang, { storyId }) + '\n')
     }
   }
 

@@ -65,6 +65,39 @@ async function graphqlPost(url, headers, body, timeoutMs = 2000) {
   }
 }
 
+const UPDATE_STORY_STATUS_MUTATION = `
+mutation ExecuteStoryUpdate(
+  $projectId: ID!
+  $commandId: ID!
+  $id: ID!
+  $status: String
+) {
+  executeCommand(input: {
+    projectId: $projectId
+    version: 1
+    commandId: $commandId
+    type: STORY_UPDATE
+    parameters: { id: $id, status: $status }
+  }) {
+    data {
+      ... on Story { id status }
+    }
+  }
+}
+`.trim()
+
+export async function updateStoryStatus({ mutationUrl, apiKey, projectId, storyId, status, timeoutMs }) {
+  const variables = { projectId, commandId: randomUUID(), id: storyId, status }
+  const json = await graphqlPost(
+    mutationUrl,
+    { 'Authorization': `Bearer ${apiKey}` },
+    JSON.stringify({ query: UPDATE_STORY_STATUS_MUTATION, variables }),
+    timeoutMs
+  )
+  assertNoErrors(json)
+  return json.data
+}
+
 export async function createComment({ mutationUrl, apiKey, projectId, storyId, content, timeoutMs }) {
   const variables = { projectId, commandId: randomUUID(), storyId, content }
   const json = await graphqlPost(

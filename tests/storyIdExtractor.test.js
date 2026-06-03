@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { extractStoryIds } from '../src/storyIdExtractor.js'
+import { extractStoryIds, extractStoryRefs } from '../src/storyIdExtractor.js'
 
 describe('extractStoryIds', () => {
   it('extracts a bare story ID', () => {
@@ -53,5 +53,52 @@ describe('extractStoryIds', () => {
     for (const kw of keywords) {
       expect(extractStoryIds(`[#123456789 ${kw}] msg`)).toEqual(['123456789'])
     }
+  })
+})
+
+describe('extractStoryRefs', () => {
+  it('returns shouldFinish false for a bare story ID', () => {
+    expect(extractStoryRefs('[#123456789] fix bug')).toEqual([{ id: '123456789', shouldFinish: false }])
+  })
+
+  it.each(['finish', 'finishes', 'finished'])(
+    'returns shouldFinish true when "%s" is a prefix keyword',
+    (kw) => {
+      expect(extractStoryRefs(`[${kw} #123456789] msg`)).toEqual([{ id: '123456789', shouldFinish: true }])
+    }
+  )
+
+  it.each(['finish', 'finishes', 'finished'])(
+    'returns shouldFinish true when "%s" is a suffix keyword',
+    (kw) => {
+      expect(extractStoryRefs(`[#123456789 ${kw}] msg`)).toEqual([{ id: '123456789', shouldFinish: true }])
+    }
+  )
+
+  it('is case-insensitive for finish keywords', () => {
+    expect(extractStoryRefs('[FINISHED #123456789] msg')).toEqual([{ id: '123456789', shouldFinish: true }])
+    expect(extractStoryRefs('[#123456789 Finishes] msg')).toEqual([{ id: '123456789', shouldFinish: true }])
+  })
+
+  it('returns shouldFinish false for non-finish keywords', () => {
+    expect(extractStoryRefs('[fixes #123456789] msg')).toEqual([{ id: '123456789', shouldFinish: false }])
+    expect(extractStoryRefs('[delivers #123456789] msg')).toEqual([{ id: '123456789', shouldFinish: false }])
+  })
+
+  it('does not set shouldFinish when finish keyword appears outside brackets', () => {
+    expect(extractStoryRefs('[#123456789] finished the work')).toEqual([{ id: '123456789', shouldFinish: false }])
+  })
+
+  it('returns independent shouldFinish per story ID', () => {
+    expect(extractStoryRefs('[finished #111111111] [#222222222] msg')).toEqual([
+      { id: '111111111', shouldFinish: true },
+      { id: '222222222', shouldFinish: false },
+    ])
+  })
+
+  it('deduplicates story IDs', () => {
+    expect(extractStoryRefs('[#111111111] [#111111111] duplicate')).toEqual([
+      { id: '111111111', shouldFinish: false },
+    ])
   })
 })
